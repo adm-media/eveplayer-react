@@ -1,0 +1,8 @@
+dist/
+node_modules/
+coverage/
+.storybook-out/
+storybook-static/
+*.log
+.DS_Store
+package-lock.json
