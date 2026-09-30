@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@admmedia/eveplayer@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@admmedia/eveplayer/-/eveplayer-1.0.0.tgz#78a1269f90f662f619fcb390ec92b2b7779f80c1"
-  integrity sha512-JHLCUTywxlbS88GP1B5oToZwlT/XoM69HyVNULCILgN8RXQzKh0l7l5pFqRcaQ1JSRN/Xmoruik1XVyFX+vWDQ==
+"@admmedia/eveplayer@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@admmedia/eveplayer/-/eveplayer-1.0.1.tgz#43e162eda8ee4c097b2bd5ffe88db21b00c089c3"
+  integrity sha512-2KOHvedf04l0TrEQopJyYDHyyO4MbfFrRRigaGRdkz2/FUTszRuMMiNHcNzMmeQKqPlr6oqaiWMWpXo+ATCkhA==
 
 "@adobe/css-tools@^4.4.0":
   version "4.5.0"
