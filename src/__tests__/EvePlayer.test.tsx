@@ -104,6 +104,23 @@ describe('<EvePlayer />', () => {
     expect(el.style.width).toBe('320px');
   });
 
+  it('keeps the classes the player added when className changes', () => {
+    const { container, rerender } = render(<EvePlayer className="frame has-playlist" />);
+    const el = container.firstElementChild as HTMLElement;
+    // What the real player does at construction and during playback.
+    el.classList.add('vjsp-widescreen', 'vjsp-pip-active');
+
+    rerender(<EvePlayer className="frame hide-player" />);
+    expect(el).toHaveClass('frame', 'hide-player', 'vjsp-widescreen', 'vjsp-pip-active');
+    expect(el).not.toHaveClass('has-playlist');
+
+    rerender(<EvePlayer />);
+    expect(el.className.split(' ').sort()).toEqual(['vjsp-pip-active', 'vjsp-widescreen']);
+
+    rerender(<EvePlayer className="  late   classes " />);
+    expect(el).toHaveClass('late', 'classes', 'vjsp-widescreen', 'vjsp-pip-active');
+  });
+
   it('renders children inside the container', () => {
     const { getByTestId } = render(
       <EvePlayer>

@@ -3,9 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useEvePlayer } from './useEvePlayer';
 import type { EvePlayerProps, EvePlayerCore } from './types';
+
+// `useLayoutEffect` applies class changes before paint, but React 17/18 warn
+// when it is rendered on the server, where neither effect runs anyway.
+const useIsomorphicLayoutEffect =
+  typeof document === 'undefined' ? useEffect : useLayoutEffect;
+
+/** Splits a `className` string into its class tokens. */
+function classTokens(className: string | undefined): string[] {
+  return className ? className.split(/\s+/).filter(Boolean) : [];
+}
 
 /**
  * React wrapper around `@admmedia/eveplayer`'s `EvePlayerCore`.
@@ -43,6 +60,27 @@ export const EvePlayer = forwardRef<EvePlayerCore | null, EvePlayerProps>(
     const containerRef = useRef<HTMLDivElement>(null);
     const player = useEvePlayer(containerRef, props);
 
+    // The player adds its own classes to the container, both when it is created
+    // (`vjsp-widescreen`, `vjsp-hide-play`, ...) and while it runs
+    // (`vjsp-pip-active`, `vjsp-hidden`, ...). If React owned the `class`
+    // attribute, any change to `className` would make it rewrite the attribute
+    // as a whole and drop them (a widescreen player collapses to zero width, an
+    // open PiP window loses its layout). So React renders only the first value,
+    // which never changes, and later values are applied here token by token,
+    // touching only the classes that came from this prop.
+    const [initialClassName] = useState(props.className);
+    const appliedClassName = useRef(props.className);
+
+    useIsomorphicLayoutEffect(() => {
+      // Always set here: the container is rendered unconditionally.
+      const container = containerRef.current as HTMLDivElement;
+      const previous = classTokens(appliedClassName.current);
+      const next = classTokens(props.className);
+      container.classList.remove(...previous.filter((token) => !next.includes(token)));
+      container.classList.add(...next.filter((token) => !previous.includes(token)));
+      appliedClassName.current = props.className;
+    }, [props.className]);
+
     useImperativeHandle<EvePlayerCore | null, EvePlayerCore | null>(
       ref,
       () => player,
@@ -50,7 +88,7 @@ export const EvePlayer = forwardRef<EvePlayerCore | null, EvePlayerProps>(
     );
 
     return (
-      <div ref={containerRef} className={props.className} style={props.style}>
+      <div ref={containerRef} className={initialClassName} style={props.style}>
         {props.children}
       </div>
     );
