@@ -92,7 +92,7 @@ Every prop is optional.
 
 | Prop | Type | Behaviour |
 |------|------|-----------|
-| `className` | `string` | Class on the container element the player mounts into. |
+| `className` | `string` | Class on the container element the player mounts into. Can change at any time: only these classes are added or removed, so the player's own classes on the same element (`vjsp-widescreen`, `vjsp-pip-active`, ...) are kept. |
 | `style` | `CSSProperties` | Inline styles on that container. |
 | `children` | `ReactNode` | Rendered inside the container, after Video.js's own DOM — e.g. absolutely-positioned overlays. |
 
@@ -187,6 +187,11 @@ function CustomShell() {
 ```
 
 `<EvePlayer>` is just this hook plus a `forwardRef` container.
+
+When you render the container yourself, keep its `className` constant: the
+player adds classes to that element (`vjsp-widescreen`, `vjsp-pip-active`, ...),
+and React drops them whenever it rewrites a changed `className`. Put classes
+that change on a wrapper element instead.
 
 ---
 

@@ -139,7 +139,12 @@ export interface EvePlayerProps extends EvePlayerCallbacks {
    * `player.setBookmarks()` when the array changes (compared by value).
    */
   bookmarks?: Bookmark[];
-  /** Class name for the player container element. */
+  /**
+   * Class name for the player container element. Safe to change at any time:
+   * only the classes from this prop are added or removed, so the classes the
+   * player puts on the same element (`vjsp-widescreen`, `vjsp-pip-active`, …)
+   * are kept.
+   */
   className?: string;
   /** Inline styles for the player container element. */
   style?: CSSProperties;
