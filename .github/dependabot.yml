@@ -26,6 +26,18 @@ updates:
       default-days: 7
       semver-major-days: 14
       exclude: ["@admmedia/*"]
+    ignore:
+      # Tests run on React 18, the version current consumers use. The peer
+      # range already allows 19 and the build output does not depend on it;
+      # drop this once React 19 is covered in CI.
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/react-dom"
+        update-types: ["version-update:semver-major"]
     groups:
       # Packages that must move together, at any update type.
       react:
