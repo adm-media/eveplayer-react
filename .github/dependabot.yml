@@ -1,0 +1,54 @@
+# Weekly version updates. Security updates are enabled in the repository
+# settings and are not affected by the schedule, the groups or the cooldown
+# below.
+#
+# @admmedia/eveplayer gets a pull request of its own, with no cooldown: it is
+# the library this wrapper is built and tested against, so a new release
+# should run through CI here as soon as it is out.
+
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Zurich
+    # Change package.json only when the new version falls outside the
+    # current range; in-range updates touch yarn.lock alone. The
+    # peerDependencies ranges are never touched.
+    versioning-strategy: increase-if-necessary
+    # Let a release settle for a while before proposing it, so a compromised
+    # or broken version is usually yanked before it reaches a pull request.
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
+      exclude: ["@admmedia/*"]
+    groups:
+      # Packages that must move together, at any update type.
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      typescript-eslint:
+        patterns: ["@typescript-eslint/*"]
+      vitest:
+        patterns: ["vitest", "@vitest/*"]
+      # Everything else, minor and patch only. Majors still arrive one pull
+      # request each.
+      tooling:
+        update-types: ["minor", "patch"]
+        exclude-patterns: ["@admmedia/*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Zurich
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
