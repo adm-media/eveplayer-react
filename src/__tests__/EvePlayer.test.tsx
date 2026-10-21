@@ -31,7 +31,6 @@ type FakePlayer = {
 };
 
 declare global {
-  // eslint-disable-next-line no-var
   var __evePlayers: FakePlayer[];
 }
 
@@ -56,7 +55,7 @@ vi.mock('@admmedia/eveplayer', () => {
     constructor(container: HTMLElement, options: unknown) {
       this.container = container;
       this.options = options;
-      (globalThis.__evePlayers ??= []).push(this as unknown as FakePlayer);
+      (globalThis.__evePlayers ??= []).push(this);
     }
 
     on(e: string, h: (p?: unknown) => void) {

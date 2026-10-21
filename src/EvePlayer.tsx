@@ -3,21 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import { useEvePlayer } from './useEvePlayer';
+import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
 import type { EvePlayerProps, EvePlayerCore } from './types';
-
-// `useLayoutEffect` applies class changes before paint, but React 17/18 warn
-// when it is rendered on the server, where neither effect runs anyway.
-const useIsomorphicLayoutEffect =
-  typeof document === 'undefined' ? useEffect : useLayoutEffect;
 
 /** Splits a `className` string into its class tokens. */
 function classTokens(className: string | undefined): string[] {
@@ -69,16 +58,17 @@ export const EvePlayer = forwardRef<EvePlayerCore | null, EvePlayerProps>(
     // which never changes, and later values are applied here token by token,
     // touching only the classes that came from this prop.
     const [initialClassName] = useState(props.className);
-    const appliedClassName = useRef(props.className);
+    const appliedClassNameRef = useRef(props.className);
 
+    // A layout effect applies class changes before paint.
     useIsomorphicLayoutEffect(() => {
       // Always set here: the container is rendered unconditionally.
       const container = containerRef.current as HTMLDivElement;
-      const previous = classTokens(appliedClassName.current);
+      const previous = classTokens(appliedClassNameRef.current);
       const next = classTokens(props.className);
       container.classList.remove(...previous.filter((token) => !next.includes(token)));
       container.classList.add(...next.filter((token) => !previous.includes(token)));
-      appliedClassName.current = props.className;
+      appliedClassNameRef.current = props.className;
     }, [props.className]);
 
     useImperativeHandle<EvePlayerCore | null, EvePlayerCore | null>(
