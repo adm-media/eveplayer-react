@@ -9,9 +9,7 @@ import { type RefObject, useEffect, useRef, useState } from 'react';
 // in the public API) to avoid a clash with it.
 import { EvePlayer as EvePlayerCore, type PlayerEventMap } from '@admmedia/eveplayer';
 import type { EvePlayerCallbacks, EvePlayerProps } from './types';
-
-/** `on()` is exactly typed per event; this is the shape after erasing the generic. */
-type BoundEventHandler = Parameters<EvePlayerCore['on']>[1];
+import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
 
 /** Maps each `EvePlayerCore` event to the prop that should receive its payload. */
 const EVENT_TO_CALLBACK: {
@@ -67,12 +65,17 @@ export function useEvePlayer(
 
   const [player, setPlayer] = useState<EvePlayerCore | null>(null);
 
-  // Latest callbacks, refreshed every render so listeners never go stale.
+  // Latest callbacks, refreshed after every render so listeners never go stale.
+  // Written in a layout effect, since React forbids writing refs during
+  // render; it runs before the create effect below, so `onReady` sees the
+  // current props.
   const callbacksRef = useRef<EvePlayerCallbacks>(props);
-  callbacksRef.current = props;
+  useIsomorphicLayoutEffect(() => {
+    callbacksRef.current = props;
+  });
 
-  const lastSourceKey = useRef<string | undefined>(undefined);
-  const lastBookmarksKey = useRef<string | undefined>(undefined);
+  const lastSourceKeyRef = useRef<string | undefined>(undefined);
+  const lastBookmarksKeyRef = useRef<string | undefined>(undefined);
 
   // --- Create / destroy -----------------------------------------------------
   useEffect(() => {
@@ -88,16 +91,16 @@ export function useEvePlayer(
           | undefined;
         fn?.(payload);
       };
-      instance.on(event, handler as BoundEventHandler);
-      return () => instance.off(event, handler as BoundEventHandler);
+      instance.on(event, handler);
+      return () => instance.off(event, handler);
     });
 
     setPlayer(instance);
     callbacksRef.current.onReady?.(instance);
 
     return () => {
-      lastSourceKey.current = undefined;
-      lastBookmarksKey.current = undefined;
+      lastSourceKeyRef.current = undefined;
+      lastBookmarksKeyRef.current = undefined;
       // dispose() emits 'dispose' before tearing the emitter down, so keep the
       // listeners attached across it (onDispose then fires). The off() calls
       // after are no-ops (the emitter is already cleared) but keep things tidy.
@@ -112,8 +115,8 @@ export function useEvePlayer(
   useEffect(() => {
     if (!player || !source) return;
     const key = JSON.stringify(source);
-    if (key === lastSourceKey.current) return;
-    lastSourceKey.current = key;
+    if (key === lastSourceKeyRef.current) return;
+    lastSourceKeyRef.current = key;
 
     if (!source.sources || source.sources.length === 0) {
       player.pause();
@@ -122,15 +125,21 @@ export function useEvePlayer(
     player.setSource(source);
   }, [player, source]);
 
+  // `player` is held in state only so this hook re-renders once it exists; it
+  // is an imperative handle, not render data, and its setters are how the
+  // player is driven. react-hooks/immutability assumes state is plain data.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- setter on the player handle
     if (player && currentTime !== undefined) player.currentTime = currentTime;
   }, [player, currentTime]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- setter on the player handle
     if (player && loop !== undefined) player.loop = loop;
   }, [player, loop]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability -- setter on the player handle
     if (player && muted !== undefined) player.muted = muted;
   }, [player, muted]);
 
@@ -141,8 +150,8 @@ export function useEvePlayer(
   useEffect(() => {
     if (!player || !bookmarks) return;
     const key = JSON.stringify(bookmarks);
-    if (key === lastBookmarksKey.current) return;
-    lastBookmarksKey.current = key;
+    if (key === lastBookmarksKeyRef.current) return;
+    lastBookmarksKeyRef.current = key;
     player.setBookmarks(bookmarks);
   }, [player, bookmarks]);
 
